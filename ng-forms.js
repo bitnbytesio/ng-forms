@@ -1,3 +1,10 @@
+/*
+ * ng-forms
+ * @author: Harcharan Singh <artisangang@gmail.com>
+ * @version 1.1
+ * @git: https://github.com/artisangang/ng-forms
+ */
+
 (function (window, angular, undefined) {
     'use strict';
     angular.module('ngForms', ['ng']).provider('$ngForm', function () {
@@ -10,17 +17,17 @@
             var $http = $http;
             var $location = $location;
 
-            ngForm.handle = function ($form, $config, $callbacks) {
+            ngForm.create = function ($config, $callbacks) {
 
 
-                function ngFormHandler($form, $config, $callbacks) {
+                function ngFormHandler($config, $callbacks) {
 
                     var ngFormInstance = this;
 
                     $callbacks = $callbacks || {};
+                    this.data = {};
 
-                    this.form = $form;
-
+                    this.internalScope = {};
 
                     this.callbacks = angular.extend({
                         success: function () {}
@@ -34,11 +41,17 @@
                     }, $config);
                     this.data = {};
 
-                    if (typeof this.config.scope != 'undefined') {
-                        var ref_path = this.config.scopePath;
+                    if (typeof this.config.scope != 'undefined' && typeof this.config.scope[this.config.path] != 'undefined') {
 
+                    	this.data = this.config.scope[this.config.path];
+
+                    	this.internalScope = this.config.scope;
+
+                        var ref_path = this.config.path;
+
+                        // watch scope
                         this.config.scope.$watch(ref_path, function (v) {
-                            ngFormInstance.form = v;
+                            ngFormInstance.data = v;
                         });
                     }
 
@@ -46,40 +59,30 @@
 
                 ngFormHandler.prototype.handle = function () {
 
-
-                    var config = this.config;
-
-                    var callbacks = this.callbacks;
-                    var $form = this.form;
-
-
-                    if (this.config.multipart) {
+                	var ngFormInstance = this;
+                    var config = ngFormInstance.config;
+                    var callbacks = ngFormInstance.callbacks;
+                    
+                    if (ngFormInstance.config.multipart) {
 
                         config.transformRequest = angular.identity;
                         config.headers['Content-Type'] = undefined;
 
                         config.data = new FormData();
-                        for (var index in this.form) {
+
+                        for (var index in ngFormInstance.data) {
                             var key = index;
-                            var value = this.form[index];
+                            var value = ngFormInstance.data[index];
                             config.data.append(key, value);
                         }
+
                     } else {
-                        config.data = $.param(this.form);
+                        config.params = ngFormInstance.data;
+						config.paramSerializer = '$httpParamSerializerJQLike';
                     }
 
 
                     $http(config).success(function (o) {
-
-                        if (jQuery(document).find('form')) {
-                            $(document).find('form .has-error').each(function () {
-
-                                $(this).removeClass('has-error');
-                                $(this).find('.help-block').html('');
-
-                            });
-                        }
-
 
                         callbacks.success(o);
 
@@ -87,26 +90,18 @@
 
                                 if (typeof callbacks.errorHandler == 'function') {
                                     callbacks.errorHandler(o.errors);
-                                } else {
+                                } 
 
-                                    var err_prefix = config.errPrefix;
-                                    for (var e_index in o.errors) {
-
-
-                                        var ele = '[ng-model="' + err_prefix + '.' + e_index + '"], [file-model="' + err_prefix + '.' + e_index + '"]';
-
-                                        var eleObject = jQuery(document).find(ele);
-
-                                        eleObject.parent().find('.help-block').html(o.errors[e_index][0]);
-                                        jQuery(eleObject).parent().before().addClass('has-error');
-                                    }
-                                }
                             }
+                        
+                        ngFormInstance.internalScope[config.path].response = o;
 
-                        if (o.message) {
-                            //$('#myId').closest('form');
+                        if (typeof o.alert != undefined) {
+                        	ngFormInstance.internalScope.dismiss = function () {
+                        		ngFormInstance.internalScope[config.path].response.alert = null;
+                        	}
                         }
-
+                        
 
 
                     }).error(function (err) {
@@ -114,7 +109,7 @@
                     });
                 };
 
-                return new ngFormHandler($form, $config, $callbacks);
+                return new ngFormHandler($config, $callbacks);
 
             };
 
@@ -129,17 +124,10 @@
             },
             link: function (scope, element, attrs) {
 
-                // var model = $parse(attrs.fileModel);
-                // var modelSetter = model.assign;
-
                 element.bind("change", function (changeEvent) {
 
-
                     scope.$apply(function () {
-                        //scope[attributes.fileModel] = element[0].files[0];
                         scope.fileModel = element[0].files[0];
-                        // modelSetter(scope, element[0].files[0]);
-                        // modelSetter(scope, element[0].files[0]);
 
                     });
 
