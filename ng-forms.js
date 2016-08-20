@@ -1,7 +1,7 @@
 /*
  * ng-forms
  * @author: Harcharan Singh <artisangang@gmail.com>
- * @version 1.1
+ * @version 1.2
  * @git: https://github.com/artisangang/ng-forms
  */
 
@@ -10,7 +10,9 @@
     angular.module('ngForms', ['ng']).provider('$ngForm', function () {
 
 
-        this.$get = function ($http, $location) {
+      
+
+        this.$get = ['$http','$location','$httpParamSerializerJQLike', function ($http, $location, $httpParamSerializerJQLike) {
 
             var ngForm = {};
 
@@ -62,13 +64,17 @@
                 	var ngFormInstance = this;
                     var config = ngFormInstance.config;
                     var callbacks = ngFormInstance.callbacks;
-                    
-                    if (ngFormInstance.config.multipart) {
 
+                    if (typeof ngFormInstance.data['response'] != 'undefined') {
+                        delete ngFormInstance.data['response'];
+                    }
+                    
+                    if (ngFormInstance.config.multipart === true) {
+                        ngFormInstance.config.method == 'post'
                         config.transformRequest = angular.identity;
                         config.headers['Content-Type'] = undefined;
 
-                        config.data = new FormData();
+                         config.data = new FormData();
 
                         for (var index in ngFormInstance.data) {
                             var key = index;
@@ -76,6 +82,13 @@
                             config.data.append(key, value);
                         }
 
+                    } else if (ngFormInstance.config.method == 'post') {
+                        config.headers['Content-Type'] = 'application/x-www-form-urlencoded;';
+                        config.data = $httpParamSerializerJQLike(ngFormInstance.data);
+
+                        console.log(ngFormInstance.data);
+                        console.log($httpParamSerializerJQLike(ngFormInstance.data));
+                    
                     } else {
                         config.params = ngFormInstance.data;
 						config.paramSerializer = '$httpParamSerializerJQLike';
@@ -84,7 +97,20 @@
 
                     $http(config).success(function (o) {
 
+                        ngFormInstance.internalScope[config.path].response = o;
+
                         callbacks.success(o);
+
+                            ngFormInstance.internalScope[config.path].response.hasError = function (key) {
+                                return typeof o.errors[key] != 'undefined';
+                            };
+
+                            ngFormInstance.internalScope[config.path].response.error = function (key) {
+
+                                if (typeof o.errors[key] == 'undefined') return;
+
+                                return (o.errors[key] == 'String') ? o.errors[key] : o.errors[key][0];
+                            };
 
                             if (o.errors) {
 
@@ -94,10 +120,10 @@
 
                             }
                         
-                        ngFormInstance.internalScope[config.path].response = o;
+                        
 
                         if (typeof o.alert != undefined) {
-                        	ngFormInstance.internalScope.dismiss = function () {
+                        	    ngFormInstance.internalScope.dismiss = function () {
                         		ngFormInstance.internalScope[config.path].response.alert = null;
                         	}
                         }
@@ -114,7 +140,7 @@
             };
 
             return ngForm;
-        };
+        }];
 
     }).directive("fileModel", ['$parse', function ($parse) {
         return {
