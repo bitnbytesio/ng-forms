@@ -1,7 +1,7 @@
 /*
  * ng-forms
  * @author: Harcharan Singh <artisangang@gmail.com>
- * @version 1.2
+ * @version 1.3
  * @git: https://github.com/artisangang/ng-forms
  */
 
@@ -56,6 +56,7 @@
                             ngFormInstance.data = v;
                         });
                     }
+         
 
                 }
 
@@ -84,12 +85,10 @@
 
                     } else if (ngFormInstance.config.method == 'post') {
                         config.headers['Content-Type'] = 'application/x-www-form-urlencoded;';
-                        config.data = $httpParamSerializerJQLike(ngFormInstance.data);
-
-                        console.log(ngFormInstance.data);
-                        console.log($httpParamSerializerJQLike(ngFormInstance.data));
-                    
-                    } else {
+                         config.data = $httpParamSerializerJQLike(ngFormInstance.data);
+                     
+                   } else {
+                        config.headers['Content-Type'] = 'application/x-www-form-urlencoded;';
                         config.params = ngFormInstance.data;
 						config.paramSerializer = '$httpParamSerializerJQLike';
                     }
@@ -97,28 +96,33 @@
 
                     $http(config).success(function (o) {
 
+                
                         ngFormInstance.internalScope[config.path].response = o;
 
                         callbacks.success(o);
 
-                            ngFormInstance.internalScope[config.path].response.hasError = function (key) {
-                                return typeof o.errors[key] != 'undefined';
-                            };
+                        if (o.location != 'undefined') {
+                            $location.path(o.location);
+                        }
 
-                            ngFormInstance.internalScope[config.path].response.error = function (key) {
+                        ngFormInstance.internalScope[config.path].response.hasError = function (key) {
+                            return typeof o.errors[key] != 'undefined';
+                        };
 
-                                if (typeof o.errors[key] == 'undefined') return;
+                        ngFormInstance.internalScope[config.path].response.error = function (key) {
 
-                                return (o.errors[key] == 'String') ? o.errors[key] : o.errors[key][0];
-                            };
+                            if (typeof o.errors[key] == 'undefined') return;
 
-                            if (o.errors) {
+                            return (o.errors[key] == 'String') ? o.errors[key] : o.errors[key][0];
+                        };
 
-                                if (typeof callbacks.errorHandler == 'function') {
-                                    callbacks.errorHandler(o.errors);
-                                } 
+                        if (o.errors) {
 
-                            }
+                            if (typeof callbacks.errorHandler == 'function') {
+                                callbacks.errorHandler(o.errors);
+                            } 
+
+                        }
                         
                         
 
