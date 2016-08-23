@@ -56,6 +56,18 @@ $scope.signin = $ngForm.create({
     </form>
 ```
 
+**ng-forms is built especially for laravel developers**
+
+```php
+
+// Laravel validations
+$validation = Validator::make($request->all(), $rules);
+
+if ($validation->fails()) {
+	return ['success' => false, 'errors' => $validation->errors()];
+}
+```
+
 **Note: dismiss function will hide alert. directly bind to some button or use in angular-ui close attribute**
 
 **Ver:1.2**
