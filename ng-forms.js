@@ -1,7 +1,7 @@
 /*
  * ng-forms
  * @author: Harcharan Singh <artisangang@gmail.com>
- * @version 1.3
+ * @version 1.3.1
  * @git: https://github.com/artisangang/ng-forms
  */
 
@@ -106,12 +106,12 @@
                         }
 
                         ngFormInstance.internalScope[config.path].response.hasError = function (key) {
-                            return typeof o.errors[key] != 'undefined';
+                            return typeof o.errors == 'udefined' || o.errors[key] != 'undefined';
                         };
 
                         ngFormInstance.internalScope[config.path].response.error = function (key) {
 
-                            if (typeof o.errors[key] == 'undefined') return;
+                            if (typeof o.errors == 'undefined' || typeof o.errors[key] == 'undefined') return;
 
                             return (o.errors[key] == 'String') ? o.errors[key] : o.errors[key][0];
                         };
