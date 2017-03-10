@@ -1,6 +1,12 @@
 # ng-forms
 Form Handler for angular js
 
+# Requirements
+
+angular 1.6
+
+** Note: for angular 1.5 switch to version 1.3 branch
+
 # Usage
 
 ```javascript
