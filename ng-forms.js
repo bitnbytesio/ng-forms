@@ -94,9 +94,10 @@
                     }
 
 
-                    $http(config).success(function (o) {
+                    $http(config).then(function (o) {
 
-                
+                	var o = o.data;
+			    
                         ngFormInstance.internalScope[config.path].response = o;
 
                         callbacks.success(o);
@@ -134,7 +135,7 @@
                         
 
 
-                    }).error(function (err) {
+                    }, function (err) {
                         console.log(err);
                     });
                 };
