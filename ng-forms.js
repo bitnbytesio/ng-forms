@@ -1,7 +1,7 @@
 /*
  * ng-forms
  * @author: Harcharan Singh <artisangang@gmail.com>
- * @version 1.3.1
+ * @version 1.4
  * @git: https://github.com/artisangang/ng-forms
  */
 
