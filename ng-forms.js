@@ -1,7 +1,8 @@
+
 /*
  * ng-forms
  * @author: Harcharan Singh <artisangang@gmail.com>
- * @version 1.5
+ * @version 1.5.2
  * @git: https://github.com/artisangang/ng-forms
  */
 
@@ -84,7 +85,14 @@
                         for (var index in ngFormInstance.data) {
                             var key = index;
                             var value = ngFormInstance.data[index];
-                            config.data.append(key, value);
+                          
+                            if (value instanceof Array || value instanceof FileList) {
+                              for (var child in value) {
+                                config.data.append(key +'[]', value[child]);
+                              }
+                            } else {
+                              config.data.append(key, value);
+                            }
                         }
 
                     } else if (ngFormInstance.config.method == 'post') {
@@ -183,37 +191,29 @@
         }];
 
     }).directive("fileModel", ['$parse', function ($parse) {
-            return {
-        restrict: 'A',
-        link: function (scope, element, attrs) {
-            var model = $parse(attrs.ngFileModel);
-            var isMultiple = attrs.multiple;
-            var modelSetter = model.assign;
-            element.bind('change', function () {
-                var values = [];
-                angular.forEach(element[0].files, function (item) {
-                    var value = {
-                       // File Name 
-                        name: item.name,
-                        //File Size 
-                        size: item.size,
-                        //File URL to view 
-                        url: URL.createObjectURL(item),
-                        // File Input Value 
-                        _file: item
-                    };
-                    values.push(value);
+        return {
+            restrict: 'A',
+        
+            link: function (scope, element, attrs) {
+                var model = $parse(attrs.fileModel);
+                var isMultiple = attrs.multiple;
+                var modelSetter = model.assign;
+                
+                element.bind("change", function (changeEvent) {
+                    
+                    scope.$apply(function () {
+                         if (isMultiple) {
+                             modelSetter(scope, element[0].files);
+                         } else {
+                             modelSetter(scope, element[0].files[0]);
+                         }
+
+                    });
+
+
                 });
-                scope.$apply(function () {
-                    if (isMultiple) {
-                        modelSetter(scope, values);
-                    } else {
-                        modelSetter(scope, values[0]);
-                    }
-                });
-            });
+            }
         }
-    };
 
     }]);
 
