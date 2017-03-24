@@ -1,7 +1,7 @@
 /*
  * ng-forms
  * @author: Harcharan Singh <artisangang@gmail.com>
- * @version 1.5.3
+ * @version 1.5.4
  * @git: https://github.com/artisangang/ng-forms
  */
 
@@ -60,6 +60,23 @@
 
                 }
 
+                ngFormHandler.prototype.parseValues = function (data) {
+                    var parsedData = {};
+                    if (data) {
+                        angular.forEach(data, function (value,key) {
+                            if (value != null && value != 'null') {
+                                if (value instanceof Array) {
+                                    value = ngFormHandler.parseValues(value);
+                                }
+                                parsedData[key] = value;
+                            }
+                        });
+                    }
+
+                    return parsedData;
+
+                };
+
                 ngFormHandler.prototype.handle = function () {
 
                     var ngFormInstance = this;
@@ -77,7 +94,7 @@
 
                          config.data = new FormData();
 
-                        for (var index in ngFormInstance.data) {
+                        for (var index in ngFormInstance.parseValues(ngFormInstance.data)) {
                             var key = index;
                             var value = ngFormInstance.data[index];
                             
