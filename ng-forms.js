@@ -1,20 +1,14 @@
-
 /*
  * ng-forms
  * @author: Harcharan Singh <artisangang@gmail.com>
- * @version 1.5.2
+ * @version 1.5.3
  * @git: https://github.com/artisangang/ng-forms
  */
 
 (function (window, angular, undefined) {
     'use strict';
     angular.module('ngForms', ['ng']).provider('$ngForm', function () {
-
-
-        this.callbacks = {
-                        success: function () {}
-
-                    };
+        
       
 
         this.$get = ['$http','$location','$httpParamSerializerJQLike', function ($http, $location, $httpParamSerializerJQLike) {
@@ -24,21 +18,22 @@
             var $http = $http;
             var $location = $location;
 
-            var callbacks = this.callbacks;
+            
 
             ngForm.create = function ($config, $callbacks) {
+
+                var callbacks = {success: function () {}};
 
 
                 function ngFormHandler($config, $callbacks) {
 
                     var ngFormInstance = this;
 
-                    $callbacks = $callbacks || {};
                     this.data = {};
 
                     this.internalScope = {};
 
-                    this.callbacks = angular.extend(callbacks, $callbacks);
+                    this.callbacks = angular.extend(callbacks, $callbacks || {});
 
                     this.config = angular.extend({
                         url: $config.url || '/',
@@ -85,14 +80,15 @@
                         for (var index in ngFormInstance.data) {
                             var key = index;
                             var value = ngFormInstance.data[index];
-                          
-                            if (value instanceof Array || value instanceof FileList) {
+                            
+                             if (value instanceof Array || value instanceof FileList) {
                               for (var child in value) {
                                 config.data.append(key +'[]', value[child]);
                               }
                             } else {
                               config.data.append(key, value);
                             }
+                            
                         }
 
                     } else if (ngFormInstance.config.method == 'post') {
@@ -193,20 +189,15 @@
     }).directive("fileModel", ['$parse', function ($parse) {
         return {
             restrict: 'A',
-        
+            scope: {
+                fileModel: "="
+            },
             link: function (scope, element, attrs) {
-                var model = $parse(attrs.fileModel);
-                var isMultiple = attrs.multiple;
-                var modelSetter = model.assign;
-                
+
                 element.bind("change", function (changeEvent) {
-                    
+
                     scope.$apply(function () {
-                         if (isMultiple) {
-                             modelSetter(scope, element[0].files);
-                         } else {
-                             modelSetter(scope, element[0].files[0]);
-                         }
+                        scope.fileModel = element[0].files[0];
 
                     });
 
