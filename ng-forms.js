@@ -1,7 +1,7 @@
 /*
  * ng-forms
  * @author: Harcharan Singh <artisangang@gmail.com>
- * @version 1.5.4
+ * @version 1.5.5
  * @git: https://github.com/artisangang/ng-forms
  */
 
@@ -61,12 +61,15 @@
                 }
 
                 ngFormHandler.prototype.parseValues = function (data) {
+
+                    var instance = this;
+
                     var parsedData = {};
                     if (data) {
                         angular.forEach(data, function (value,key) {
                             if (value != null && value != 'null') {
                                 if (value instanceof Array) {
-                                    value = ngFormHandler.parseValues(value);
+                                    value = instance.parseValues(value);
                                 }
                                 parsedData[key] = value;
                             }
@@ -93,14 +96,23 @@
                         config.headers['Content-Type'] = undefined;
 
                          config.data = new FormData();
+                        
 
                         for (var index in ngFormInstance.parseValues(ngFormInstance.data)) {
                             var key = index;
                             var value = ngFormInstance.data[index];
                             
-                             if (value instanceof Array || value instanceof FileList) {
+                           
+
+                             if (value instanceof Array) {
+                                
                               for (var child in value) {
                                 config.data.append(key +'[]', value[child]);
+                              }
+
+                            } else if (value instanceof FileList) {
+                                for (var i=0; i<=value.length-1; i++) {
+                                    config.data.append(key+ '['+i+']', value[i]);
                               }
                             } else {
                               config.data.append(key, value);
@@ -214,7 +226,11 @@
                 element.bind("change", function (changeEvent) {
 
                     scope.$apply(function () {
-                        scope.fileModel = element[0].files[0];
+                         if (attrs.multiple) {
+                            scope.fileModel = element[0].files;
+                        } else {
+                            scope.fileModel = element[0].files[0];
+                        }
 
                     });
 
