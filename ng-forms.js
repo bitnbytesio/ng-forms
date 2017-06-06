@@ -1,7 +1,7 @@
 /*
  * ng-forms
  * @author: Harcharan Singh <artisangang@gmail.com>
- * @version 1.5.4
+ * @version 1.5.6
  * @git: https://github.com/artisangang/ng-forms
  */
 
@@ -41,7 +41,7 @@
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                         multipart: false
                     }, $config);
-                    this.data = {};
+ 
 
                     if (typeof this.config.scope != 'undefined' && typeof this.config.scope[this.config.path] != 'undefined') {
 
@@ -55,6 +55,10 @@
                         this.config.scope.$watch(ref_path, function (v) {
                             ngFormInstance.data = v;
                         });
+                    } 
+
+                    if (typeof this.config.data != 'undefined') {
+                        this.data = this.config.data;
                     }
          
 
@@ -143,16 +147,19 @@
                             $location.path(o.location);
                         }
 
-                        ngFormInstance.internalScope[config.path].response.hasError = function (key) {
-                            return typeof o.errors == 'udefined' || o.errors[key] != 'undefined';
-                        };
+                        if (config.path && ngFormInstance.internalScope[config.path] && ngFormInstance.internalScope[config.path].response) {
 
-                        ngFormInstance.internalScope[config.path].response.error = function (key) {
+                            ngFormInstance.internalScope[config.path].response.hasError = function (key) {
+                                return typeof o.errors == 'udefined' || o.errors[key] != 'undefined';
+                            };
 
-                            if (typeof o.errors == 'undefined' || typeof o.errors[key] == 'undefined') return;
+                            ngFormInstance.internalScope[config.path].response.error = function (key) {
 
-                            return (o.errors[key] == 'String') ? o.errors[key] : o.errors[key][0];
-                        };
+                                if (typeof o.errors == 'undefined' || typeof o.errors[key] == 'undefined') return;
+
+                                return (o.errors[key] == 'String') ? o.errors[key] : o.errors[key][0];
+                            };
+                        }
 
                         if (o.errors) {
 
@@ -182,26 +189,16 @@
 
                             ngFormInstance.internalScope[config.path].response.errors = err.data;
 
-                            ngFormInstance.internalScope[config.path].response.hasError = function (key, index) {
-
-
-                                if (typeof index != 'undefined') {
-                                    return typeof err.data[index] != 'undefined' && typeof err.data[index][key] != 'undefined';
-                                }
-
+                            ngFormInstance.internalScope[config.path].response.hasError = function (key) {
                                 return typeof err.data[key] != 'undefined';
                             };
 
-                            ngFormInstance.internalScope[config.path].response.error = function (key, index) {
+                            ngFormInstance.internalScope[config.path].response.error = function (key) {
 
                        
-                                if (typeof index == 'undefined' && typeof err.data[key] == 'undefined') return;
+                                if (typeof err.data[key] == 'undefined') return;
 
-                                if (typeof index != 'undefined' && typeof err.data[index] != 'undefined' && typeof err.data[index][key] != 'undefined') {
-                                    return (err.data[index][key] instanceof Array) ? err.data[index][key][0] : err.data[index][key];
-                                }
-
-                                return (err.data[key] instanceof Array) ? err.data[key][0] : err.data[key];
+                                return (err.data[key] == 'String') ? err.data[key] : err.data[key][0];
                             };
 
                             if (typeof callbacks.errorHandler == 'function') {
