@@ -189,16 +189,26 @@
 
                             ngFormInstance.internalScope[config.path].response.errors = err.data;
 
-                            ngFormInstance.internalScope[config.path].response.hasError = function (key) {
+                             ngFormInstance.internalScope[config.path].response.hasError = function (key, index) {
+
+
+                                if (typeof index != 'undefined') {
+                                    return typeof err.data[index] != 'undefined' && typeof err.data[index][key] != 'undefined';
+                                }
+
                                 return typeof err.data[key] != 'undefined';
                             };
 
-                            ngFormInstance.internalScope[config.path].response.error = function (key) {
+                             ngFormInstance.internalScope[config.path].response.error = function (key, index) {
 
                        
-                                if (typeof err.data[key] == 'undefined') return;
+                                if (typeof index == 'undefined' && typeof err.data[key] == 'undefined') return;
 
-                                return (err.data[key] == 'String') ? err.data[key] : err.data[key][0];
+                                if (typeof index != 'undefined' && typeof err.data[index] != 'undefined' && typeof err.data[index][key] != 'undefined') {
+                                    return (err.data[index][key] instanceof Array) ? err.data[index][key][0] : err.data[index][key];
+                                }
+
+                                return (err.data[key] instanceof Array) ? err.data[key][0] : err.data[key];
                             };
 
                             if (typeof callbacks.errorHandler == 'function') {
